@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Irrigation System v3.0</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌱 Smart Irrigation System v3.0</h1>
+            <p>Multi-Crop Water Management</p>
+            <div class="user-info" id="userInfo"></div>
+        </header>
+
+        <div class="weather-widget" id="weatherWidget"></div>
+
+        <div class="controls">
+            <button id="autoModeBtn" class="btn btn-primary">Auto Mode: OFF</button>
+            <button id="refreshBtn" class="btn btn-secondary">🔄 Refresh</button>
+            <button id="scheduleBtn" class="btn btn-secondary">📅 Schedules</button>
+            <button id="notifBtn" class="btn btn-secondary">🔔 Alerts</button>
+        </div>
+
+        <div id="sensorsGrid" class="sensors-grid"></div>
+
+        <div class="modal" id="loginModal">
+            <div class="modal-content">
+                <h2>Login</h2>
+                <input type="text" id="username" placeholder="Username" class="input-field">
+                <input type="password" id="password" placeholder="Password" class="input-field">
+                <button id="loginBtn" class="btn btn-primary">Login</button>
+                <p class="hint">Default: admin / admin123</p>
+            </div>
+        </div>
+
+        <div class="modal" id="historyModal">
+            <div class="modal-content">
+                <span class="close" data-modal="historyModal">&times;</span>
+                <h2>Watering History</h2>
+                <button id="exportBtn" class="btn btn-secondary">📥 Export CSV</button>
+                <div id="historyContent"></div>
+            </div>
+        </div>
+
+        <div class="modal" id="scheduleModal">
+            <div class="modal-content">
+                <span class="close" data-modal="scheduleModal">&times;</span>
+                <h2>Watering Schedules</h2>
+                <div class="schedule-form">
+                    <select id="scheduleSensor" class="input-field"></select>
+                    <input type="time" id="scheduleTime" class="input-field">
+                    <input type="text" id="scheduleDays" placeholder="Days (e.g., Monday,Wednesday)" class="input-field">
+                    <button id="addScheduleBtn" class="btn btn-primary">Add Schedule</button>
+                </div>
+                <div id="scheduleList"></div>
+            </div>
+        </div>
+
+        <div class="modal" id="notifModal">
+            <div class="modal-content">
+                <span class="close" data-modal="notifModal">&times;</span>
+                <h2>Notifications</h2>
+                <div id="notifContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

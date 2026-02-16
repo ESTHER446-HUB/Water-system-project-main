@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.log
+.env
+venv/
+.vscode/
+.idea/
+*.swp
+nohup.out
+server.log
