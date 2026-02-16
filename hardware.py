@@ -10,7 +10,6 @@ try:
     GPIO_AVAILABLE = True
 except ImportError:
     GPIO_AVAILABLE = False
-    print("GPIO libraries not available. Running in simulation mode.")
 
 import time
 from datetime import datetime
@@ -73,7 +72,6 @@ class WaterPump:
             GPIO.output(self.pin, GPIO.LOW)
             self.is_running = False
         else:
-            print(f"Simulating pump activation for {duration_seconds}s")
             time.sleep(duration_seconds)
     
     def stop(self):
@@ -90,7 +88,7 @@ class PlantCamera:
                 self.camera = PiCamera()
                 self.camera.resolution = (1024, 768)
             except:
-                print("Camera not available")
+                pass
     
     def capture_image(self, sensor_id, save_path='static/images'):
         """Capture plant image"""
@@ -98,9 +96,7 @@ class PlantCamera:
             filename = f'{save_path}/sensor_{sensor_id}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.jpg'
             self.camera.capture(filename)
             return filename
-        else:
-            print("Camera simulation - no image captured")
-            return None
+        return None
     
     def start_timelapse(self, interval_minutes=60):
         """Start timelapse monitoring"""
