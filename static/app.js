@@ -26,7 +26,7 @@ async function login() {
     if (data.success) {
         loggedIn = true;
         document.getElementById('loginModal').style.display = 'none';
-        document.getElementById('userInfo').innerHTML = `👤 ${data.username} | <a href="#" onclick="logout()" style="color:white">Logout</a>`;
+        document.getElementById('userMenu').innerHTML = `👤 ${data.username}`;
         init();
     } else {
         alert('Invalid credentials');
@@ -71,7 +71,16 @@ async function fetchCrops() {
 async function fetchSensors() {
     const response = await fetch(`${API_URL}/sensors`);
     sensors = await response.json();
+    updateStats();
     renderSensors();
+}
+
+function updateStats() {
+    if (sensors.length > 0) {
+        const avgMoisture = sensors.reduce((sum, s) => sum + s.current_moisture, 0) / sensors.length;
+        document.getElementById('avgMoisture').textContent = avgMoisture.toFixed(1) + '%';
+        document.getElementById('totalSensors').textContent = sensors.length;
+    }
 }
 
 async function updateMoisture(sensorId) {
@@ -100,9 +109,8 @@ async function toggleAutoMode() {
         body: JSON.stringify({enabled: autoMode})
     });
     
-    const btn = document.getElementById('autoModeBtn');
-    btn.textContent = `Auto Mode: ${autoMode ? 'ON' : 'OFF'}`;
-    btn.classList.toggle('active', autoMode);
+    document.getElementById('autoStatus').textContent = autoMode ? 'ON' : 'OFF';
+    document.getElementById('autoStatus').style.color = autoMode ? '#10b981' : '#666';
 }
 
 async function changeCrop(sensorId, cropId) {
@@ -242,9 +250,8 @@ function renderSensors() {
                 </div>
                 
                 <div class="sensor-actions">
-                    <button class="btn btn-water" onclick="waterPlant(${sensor.id})">💧 Water</button>
+                    <button class="btn btn-water" onclick="waterPlant(${sensor.id})">💧 Water Now</button>
                     <button class="btn btn-history" onclick="showHistory(${sensor.id})">📊 History</button>
-                    <button class="btn btn-export" onclick="exportData()">📥 Export</button>
                 </div>
                 
                 <div class="last-reading">
@@ -256,7 +263,6 @@ function renderSensors() {
 }
 
 async function init() {
-    await fetchWeather();
     await fetchCrops();
     await fetchSensors();
     
@@ -269,7 +275,6 @@ async function init() {
     });
     
     document.getElementById('scheduleBtn').addEventListener('click', showSchedules);
-    document.getElementById('notifBtn').addEventListener('click', showNotifications);
     document.getElementById('exportBtn').addEventListener('click', exportData);
     document.getElementById('addScheduleBtn').addEventListener('click', addSchedule);
     document.getElementById('loginBtn').addEventListener('click', login);
