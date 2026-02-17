@@ -57,7 +57,20 @@ async function login() {
 async function init() {
     await fetchCrops();
     await fetchSensors();
+    await fetchStats();
     startLiveUpdates();
+}
+
+async function fetchStats() {
+    try {
+        const response = await fetch(`${API_URL}/stats`);
+        const data = await response.json();
+        document.getElementById('avgMoisture').textContent = data.avg_moisture + '%';
+        document.getElementById('activeSensors').textContent = data.total_sensors;
+        document.getElementById('todayWatering').textContent = data.today_watering;
+    } catch (error) {
+        console.error('Error fetching stats:', error);
+    }
 }
 
 async function fetchCrops() {
@@ -86,6 +99,7 @@ function updateDashboard() {
         document.getElementById('avgMoisture').textContent = avgMoisture.toFixed(1) + '%';
         document.getElementById('activeSensors').textContent = sensors.length;
     }
+    fetchStats();
 }
 
 function renderSensors() {
@@ -282,5 +296,6 @@ function startLiveUpdates() {
             }
         }
         await fetchSensors();
+        await fetchStats();
     }, 30000);
 }
