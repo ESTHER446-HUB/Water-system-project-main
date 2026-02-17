@@ -1,20 +1,15 @@
-# Smart Irrigation System
+# SmartFarm Irrigation System
 
-Full-stack multi-crop water management system.
+Modern irrigation management platform for multi-crop farming.
 
 ## Features
 
-- Multi-Crop Support: 10 crops with specific water needs
-- Real-time Monitoring: Live moisture readings from 5 sensors
-- Auto/Manual Control: Automated watering based on thresholds
-- Web Dashboard: Modern responsive UI
-- Hardware Ready: GPIO integration for Raspberry Pi
-- Weather Integration: Real-time weather data
-- User Authentication: Secure login system
-- Scheduling: Automatic watering schedules
-- Notifications: Real-time alerts
-- Data Export: Download history as CSV
-- Camera Integration: Plant monitoring
+- Multi-crop monitoring (10 crops)
+- Real-time soil moisture tracking
+- Automated watering control
+- Scheduling system
+- Data export & analytics
+- Responsive web dashboard
 
 ## Quick Start
 
@@ -23,41 +18,19 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open: `http://localhost:5000`
+Access: `http://localhost:5000`
 
-Login: `admin` / `admin123`
+Default login: `admin` / `admin123`
 
-## Project Structure
+## Live Demo
 
-```
-├── app.py              # Flask backend
-├── hardware.py         # GPIO sensors
-├── static/
-│   ├── index.html      # Dashboard
-│   ├── style.css       # Styling
-│   └── app.js          # Frontend logic
-└── requirements.txt    # Dependencies
-```
+https://water-system-project-main.onrender.com
 
-## Deploy to Render
+## Tech Stack
 
-1. Push to GitHub
-2. Go to render.com
-3. New Web Service → Connect repo
-4. Build: `pip install -r requirements.txt`
-5. Start: `gunicorn app:app --bind 0.0.0.0:$PORT`
-6. Deploy!
-
-## Hardware Setup
-
-- Sensors: GPIO 17, 27, 22, 10, 9
-- Pumps: GPIO 23, 24, 25, 8, 7
-- DHT22: GPIO 4
-- Camera: CSI port
-
-## Crops
-
-Tomato, Lettuce, Carrot, Pepper, Cucumber, Spinach, Beans, Corn, Strawberry, Herbs
+- Backend: Flask + SQLite
+- Frontend: HTML5 + CSS3 + JavaScript
+- Deployment: Render
 
 ## Author
 

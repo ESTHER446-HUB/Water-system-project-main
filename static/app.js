@@ -45,13 +45,12 @@ async function login() {
             loggedIn = true;
             closeModal('loginModal');
             document.getElementById('userProfile').innerHTML = `<span class="user-avatar">👤</span>`;
-            showNotification('Welcome back!', 'success');
             init();
         } else {
-            showNotification('Invalid credentials', 'error');
+            alert('Invalid credentials');
         }
     } catch (error) {
-        showNotification('Connection error', 'error');
+        alert('Connection error');
     }
 }
 
@@ -146,11 +145,11 @@ async function waterPlant(sensorId) {
         const data = await response.json();
         
         if (data.success) {
-            showNotification(`Watered! ${data.moisture_before}% → ${data.moisture_after}%`, 'success');
+            alert(`Watered! ${data.moisture_before}% → ${data.moisture_after}%`);
             await fetchSensors();
         }
     } catch (error) {
-        showNotification('Watering failed', 'error');
+        alert('Watering failed');
     }
 }
 
@@ -162,9 +161,8 @@ async function changeCrop(sensorId, cropId) {
             body: JSON.stringify({crop_id: cropId})
         });
         await fetchSensors();
-        showNotification('Crop updated', 'success');
     } catch (error) {
-        showNotification('Update failed', 'error');
+        alert('Update failed');
     }
 }
 
@@ -178,9 +176,8 @@ async function toggleAutoMode() {
         });
         
         document.getElementById('autoStatus').textContent = autoMode ? 'ON' : 'OFF';
-        showNotification(`Auto mode ${autoMode ? 'enabled' : 'disabled'}`, 'success');
     } catch (error) {
-        showNotification('Failed to toggle auto mode', 'error');
+        alert('Failed to toggle');
     }
 }
 
@@ -201,7 +198,7 @@ async function showHistory(sensorId) {
         
         openModal('historyModal');
     } catch (error) {
-        showNotification('Failed to load history', 'error');
+        alert('Failed to load history');
     }
 }
 
@@ -222,10 +219,9 @@ async function addSchedule() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({sensor_id: sensorId, time, days})
         });
-        showNotification('Schedule added', 'success');
         loadSchedules();
     } catch (error) {
-        showNotification('Failed to add schedule', 'error');
+        alert('Failed to add schedule');
     }
 }
 
@@ -257,10 +253,9 @@ async function loadSchedules() {
 async function deleteSchedule(scheduleId) {
     try {
         await fetch(`${API_URL}/schedules/${scheduleId}`, {method: 'DELETE'});
-        showNotification('Schedule deleted', 'success');
         loadSchedules();
     } catch (error) {
-        showNotification('Failed to delete schedule', 'error');
+        alert('Failed to delete');
     }
 }
 
@@ -275,30 +270,6 @@ function openModal(modalId) {
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     modal.classList.remove('active');
-}
-
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 1rem 2rem;
-        background: ${type === 'success' ? '#10b981' : '#ef4444'};
-        color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    `;
-    
-    document.body.appendChild(notification);
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
 }
 
 function startLiveUpdates() {
