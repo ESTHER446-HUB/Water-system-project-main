@@ -3,106 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Irrigation System</title>
+    <title>Smart Irrigation - Monitor & Control Your Farm</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Navigation -->
     <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo">🌱 Smart Irrigation</div>
-            <div class="nav-links">
-                <a href="#dashboard" class="nav-link active">Dashboard</a>
-                <a href="#sensors" class="nav-link">Sensors</a>
-                <a href="#schedules" class="nav-link">Schedules</a>
-                <a href="#history" class="nav-link">History</a>
+        <div class="nav-wrapper">
+            <div class="nav-brand">
+                <span class="logo-icon">🌱</span>
+                <span class="logo-text">SmartFarm</span>
             </div>
-            <div class="user-menu" id="userMenu"></div>
+            <div class="nav-menu">
+                <a href="#home" class="nav-item active">Home</a>
+                <a href="#sensors" class="nav-item">Sensors</a>
+                <a href="#analytics" class="nav-item">Analytics</a>
+                <a href="#settings" class="nav-item">Settings</a>
+            </div>
+            <div class="nav-actions">
+                <div class="search-box">
+                    <input type="text" placeholder="Search sensors..." class="search-input">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <div class="user-profile" id="userProfile">
+                    <span class="user-avatar">👤</span>
+                </div>
+            </div>
         </div>
     </nav>
 
-    <div class="hero">
-        <h1>Multi-Crop Water Management System</h1>
-        <p>Monitor and control irrigation for 10 different crops</p>
-    </div>
-
-    <div class="container">
-        <div class="stats-bar">
-            <div class="stat-card">
-                <div class="stat-icon">💧</div>
-                <div class="stat-info">
-                    <div class="stat-value" id="totalSensors">5</div>
-                    <div class="stat-label">Active Sensors</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🌡️</div>
-                <div class="stat-info">
-                    <div class="stat-value" id="avgMoisture">--</div>
-                    <div class="stat-label">Avg Moisture</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">⚡</div>
-                <div class="stat-info">
-                    <div class="stat-value" id="autoStatus">OFF</div>
-                    <div class="stat-label">Auto Mode</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">📊</div>
-                <div class="stat-info">
-                    <div class="stat-value" id="todayWatering">0</div>
-                    <div class="stat-label">Today's Watering</div>
-                </div>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Smart Irrigation System</h1>
+            <p class="hero-subtitle">Monitor soil moisture, automate watering, and optimize crop health with real-time data</p>
+            <div class="hero-actions">
+                <button class="btn btn-primary" id="getStartedBtn">Get Started</button>
+                <button class="btn btn-outline" id="learnMoreBtn">Learn More</button>
             </div>
         </div>
-
-        <div class="controls-section">
-            <button id="autoModeBtn" class="btn btn-primary">🔄 Toggle Auto Mode</button>
-            <button id="refreshBtn" class="btn btn-secondary">🔃 Refresh Data</button>
-            <button id="scheduleBtn" class="btn btn-secondary">📅 Manage Schedules</button>
+        <div class="hero-stats">
+            <div class="stat-box">
+                <div class="stat-number" id="activeSensors">5</div>
+                <div class="stat-label">Active Sensors</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="avgMoisture">--</div>
+                <div class="stat-label">Avg Moisture</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="waterSaved">2.4L</div>
+                <div class="stat-label">Water Saved Today</div>
+            </div>
         </div>
+    </section>
 
-        <div class="section-title">Your Sensors</div>
-        <div id="sensorsGrid" class="sensors-grid"></div>
-    </div>
+    <!-- Quick Actions -->
+    <section class="quick-actions">
+        <div class="container">
+            <button class="action-card" id="autoModeCard">
+                <div class="action-icon">⚡</div>
+                <div class="action-content">
+                    <div class="action-title">Auto Mode</div>
+                    <div class="action-status" id="autoStatus">OFF</div>
+                </div>
+            </button>
+            <button class="action-card" id="scheduleCard">
+                <div class="action-icon">📅</div>
+                <div class="action-content">
+                    <div class="action-title">Schedules</div>
+                    <div class="action-status">3 Active</div>
+                </div>
+            </button>
+            <button class="action-card" id="alertsCard">
+                <div class="action-icon">🔔</div>
+                <div class="action-content">
+                    <div class="action-title">Alerts</div>
+                    <div class="action-status">2 New</div>
+                </div>
+            </button>
+            <button class="action-card" id="reportsCard">
+                <div class="action-icon">📊</div>
+                <div class="action-content">
+                    <div class="action-title">Reports</div>
+                    <div class="action-status">View All</div>
+                </div>
+            </button>
+        </div>
+    </section>
 
+    <!-- Sensors Section -->
+    <section class="sensors-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Your Sensors</h2>
+                <div class="section-filters">
+                    <button class="filter-btn active">All</button>
+                    <button class="filter-btn">Active</button>
+                    <button class="filter-btn">Low Moisture</button>
+                    <button class="filter-btn">Critical</button>
+                </div>
+            </div>
+            <div class="sensors-grid" id="sensorsGrid">
+                <!-- Sensors will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
     <div class="modal" id="loginModal">
-        <div class="modal-content">
-            <h2>Welcome Back</h2>
-            <p>Login to manage your irrigation system</p>
-            <input type="text" id="username" placeholder="Username" class="input-field">
-            <input type="password" id="password" placeholder="Password" class="input-field">
-            <button id="loginBtn" class="btn btn-primary btn-block">Login</button>
-            <p class="hint">Default: admin / admin123</p>
-        </div>
-    </div>
-
-    <div class="modal" id="historyModal">
-        <div class="modal-content">
-            <span class="close" data-modal="historyModal">&times;</span>
-            <h2>Watering History</h2>
-            <button id="exportBtn" class="btn btn-secondary">📥 Export CSV</button>
-            <div id="historyContent"></div>
-        </div>
-    </div>
-
-    <div class="modal" id="scheduleModal">
-        <div class="modal-content">
-            <span class="close" data-modal="scheduleModal">&times;</span>
-            <h2>Watering Schedules</h2>
-            <div class="schedule-form">
-                <select id="scheduleSensor" class="input-field"></select>
-                <input type="time" id="scheduleTime" class="input-field">
-                <input type="text" id="scheduleDays" placeholder="Days (e.g., Monday,Wednesday)" class="input-field">
-                <button id="addScheduleBtn" class="btn btn-primary">Add Schedule</button>
+        <div class="modal-overlay"></div>
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Welcome Back</h3>
+                <p>Sign in to manage your irrigation system</p>
             </div>
-            <div id="scheduleList"></div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" class="form-input" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Enter password">
+                </div>
+                <button class="btn btn-primary btn-full" id="loginBtn">Sign In</button>
+                <p class="form-hint">Default: admin / admin123</p>
+            </div>
         </div>
     </div>
 
+    <!-- History Modal -->
+    <div class="modal" id="historyModal">
+        <div class="modal-overlay" onclick="closeModal('historyModal')"></div>
+        <div class="modal-box modal-large">
+            <div class="modal-header">
+                <h3>Watering History</h3>
+                <button class="modal-close" onclick="closeModal('historyModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <button class="btn btn-secondary" id="exportBtn">📥 Export CSV</button>
+                <div id="historyContent" class="history-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Modal -->
+    <div class="modal" id="scheduleModal">
+        <div class="modal-overlay" onclick="closeModal('scheduleModal')"></div>
+        <div class="modal-box modal-large">
+            <div class="modal-header">
+                <h3>Watering Schedules</h3>
+                <button class="modal-close" onclick="closeModal('scheduleModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="schedule-form">
+                    <select id="scheduleSensor" class="form-input"></select>
+                    <input type="time" id="scheduleTime" class="form-input">
+                    <input type="text" id="scheduleDays" class="form-input" placeholder="Days (e.g., Monday,Wednesday)">
+                    <button class="btn btn-primary" id="addScheduleBtn">Add Schedule</button>
+                </div>
+                <div id="scheduleList" class="schedule-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
     <footer class="footer">
-        <p>&copy; 2024 Smart Irrigation System | Esther Kuria</p>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="logo-icon">🌱</span>
+                    <span class="logo-text">SmartFarm</span>
+                    <p>Intelligent irrigation for modern farming</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-col">
+                        <h4>Product</h4>
+                        <a href="#">Features</a>
+                        <a href="#">Pricing</a>
+                        <a href="#">Support</a>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Company</h4>
+                        <a href="#">About</a>
+                        <a href="#">Contact</a>
+                        <a href="#">Careers</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 SmartFarm. Built by Esther Kuria</p>
+            </div>
+        </div>
     </footer>
 
     <script src="app.js"></script>

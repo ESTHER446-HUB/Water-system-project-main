@@ -5,10 +5,27 @@ let sensors = [];
 let currentSensorForExport = null;
 let loggedIn = false;
 
-async function checkLogin() {
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    checkLogin();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    document.getElementById('loginBtn')?.addEventListener('click', login);
+    document.getElementById('autoModeCard')?.addEventListener('click', toggleAutoMode);
+    document.getElementById('scheduleCard')?.addEventListener('click', () => openModal('scheduleModal'));
+    document.getElementById('exportBtn')?.addEventListener('click', exportData);
+    document.getElementById('addScheduleBtn')?.addEventListener('click', addSchedule);
+    document.getElementById('getStartedBtn')?.addEventListener('click', () => {
+        document.querySelector('#sensors')?.scrollIntoView({ behavior: 'smooth' });
+    });
+}
+
+function checkLogin() {
     const loginModal = document.getElementById('loginModal');
     if (!loggedIn) {
-        loginModal.style.display = 'block';
+        loginModal.classList.add('active');
     }
 }
 
@@ -16,200 +33,60 @@ async function login() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     
-    const response = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({username, password})
-    });
-    
-    const data = await response.json();
-    if (data.success) {
-        loggedIn = true;
-        document.getElementById('loginModal').style.display = 'none';
-        document.getElementById('userMenu').innerHTML = `👤 ${data.username}`;
-        init();
-    } else {
-        alert('Invalid credentials');
-    }
-}
-
-async function logout() {
-    await fetch(`${API_URL}/logout`, {method: 'POST'});
-    loggedIn = false;
-    location.reload();
-}
-
-async function fetchWeather() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            const response = await fetch(`${API_URL}/weather?lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
-            const data = await response.json();
-            
-            document.getElementById('weatherWidget').innerHTML = `
-                <div class="weather-item">
-                    <div class="value">🌡️ ${data.temperature}°C</div>
-                    <div class="label">Temperature</div>
-                </div>
-                <div class="weather-item">
-                    <div class="value">💧 ${data.precipitation}mm</div>
-                    <div class="label">Precipitation</div>
-                </div>
-                <div class="weather-item">
-                    <div class="value">💨 ${data.windspeed}km/h</div>
-                    <div class="label">Wind Speed</div>
-                </div>
-            `;
+    try {
+        const response = await fetch(`${API_URL}/login`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username, password})
         });
+        
+        const data = await response.json();
+        if (data.success) {
+            loggedIn = true;
+            closeModal('loginModal');
+            document.getElementById('userProfile').innerHTML = `<span class="user-avatar">👤</span>`;
+            showNotification('Welcome back!', 'success');
+            init();
+        } else {
+            showNotification('Invalid credentials', 'error');
+        }
+    } catch (error) {
+        showNotification('Connection error', 'error');
     }
+}
+
+async function init() {
+    await fetchCrops();
+    await fetchSensors();
+    startLiveUpdates();
 }
 
 async function fetchCrops() {
-    const response = await fetch(`${API_URL}/crops`);
-    crops = await response.json();
+    try {
+        const response = await fetch(`${API_URL}/crops`);
+        crops = await response.json();
+    } catch (error) {
+        console.error('Error fetching crops:', error);
+    }
 }
 
 async function fetchSensors() {
-    const response = await fetch(`${API_URL}/sensors`);
-    sensors = await response.json();
-    updateStats();
-    renderSensors();
+    try {
+        const response = await fetch(`${API_URL}/sensors`);
+        sensors = await response.json();
+        updateDashboard();
+        renderSensors();
+    } catch (error) {
+        console.error('Error fetching sensors:', error);
+    }
 }
 
-function updateStats() {
+function updateDashboard() {
     if (sensors.length > 0) {
         const avgMoisture = sensors.reduce((sum, s) => sum + s.current_moisture, 0) / sensors.length;
         document.getElementById('avgMoisture').textContent = avgMoisture.toFixed(1) + '%';
-        document.getElementById('totalSensors').textContent = sensors.length;
+        document.getElementById('activeSensors').textContent = sensors.length;
     }
-}
-
-async function updateMoisture(sensorId) {
-    const response = await fetch(`${API_URL}/sensor/${sensorId}/moisture`);
-    const data = await response.json();
-    return data.moisture;
-}
-
-async function waterPlant(sensorId) {
-    const response = await fetch(`${API_URL}/sensor/${sensorId}/water`, {
-        method: 'POST'
-    });
-    const data = await response.json();
-    
-    if (data.success) {
-        alert(`Watered! ${data.moisture_before}% → ${data.moisture_after}%`);
-        await fetchSensors();
-    }
-}
-
-async function toggleAutoMode() {
-    autoMode = !autoMode;
-    await fetch(`${API_URL}/auto-mode`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({enabled: autoMode})
-    });
-    
-    document.getElementById('autoStatus').textContent = autoMode ? 'ON' : 'OFF';
-    document.getElementById('autoStatus').style.color = autoMode ? '#10b981' : '#666';
-}
-
-async function changeCrop(sensorId, cropId) {
-    await fetch(`${API_URL}/sensor/${sensorId}/crop`, {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({crop_id: cropId})
-    });
-    await fetchSensors();
-}
-
-async function showHistory(sensorId) {
-    currentSensorForExport = sensorId;
-    const response = await fetch(`${API_URL}/history/${sensorId}`);
-    const history = await response.json();
-    
-    const modal = document.getElementById('historyModal');
-    const content = document.getElementById('historyContent');
-    
-    content.innerHTML = history.map(log => `
-        <div class="history-item">
-            <strong>${new Date(log.timestamp).toLocaleString()}</strong><br>
-            Moisture: ${log.moisture_before.toFixed(1)}% → ${log.moisture_after.toFixed(1)}%<br>
-            Amount: ${log.amount}ml
-        </div>
-    `).join('');
-    
-    modal.style.display = 'block';
-}
-
-async function exportData() {
-    if (currentSensorForExport) {
-        window.location.href = `${API_URL}/export/${currentSensorForExport}`;
-    }
-}
-
-async function showSchedules() {
-    const response = await fetch(`${API_URL}/schedules`);
-    const schedules = await response.json();
-    
-    const modal = document.getElementById('scheduleModal');
-    const list = document.getElementById('scheduleList');
-    const select = document.getElementById('scheduleSensor');
-    
-    select.innerHTML = sensors.map(s => `<option value="${s.id}">Sensor ${s.id} - ${s.crop_name}</option>`).join('');
-    
-    list.innerHTML = schedules.map(sch => `
-        <div class="schedule-item">
-            <div>
-                <strong>Sensor ${sch.sensor_id}</strong> at ${sch.time}<br>
-                Days: ${sch.days}
-            </div>
-            <button onclick="deleteSchedule(${sch.id})">Delete</button>
-        </div>
-    `).join('');
-    
-    modal.style.display = 'block';
-}
-
-async function addSchedule() {
-    const sensorId = document.getElementById('scheduleSensor').value;
-    const time = document.getElementById('scheduleTime').value;
-    const days = document.getElementById('scheduleDays').value;
-    
-    await fetch(`${API_URL}/schedules`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({sensor_id: sensorId, time, days})
-    });
-    
-    showSchedules();
-}
-
-async function deleteSchedule(scheduleId) {
-    await fetch(`${API_URL}/schedules/${scheduleId}`, {method: 'DELETE'});
-    showSchedules();
-}
-
-async function showNotifications() {
-    const response = await fetch(`${API_URL}/notifications`);
-    const notifs = await response.json();
-    
-    const modal = document.getElementById('notifModal');
-    const content = document.getElementById('notifContent');
-    
-    content.innerHTML = notifs.map(n => `
-        <div class="notif-item">
-            <strong>${new Date(n.timestamp).toLocaleString()}</strong><br>
-            ${n.message}
-        </div>
-    `).join('');
-    
-    modal.style.display = 'block';
-}
-
-function getMoistureStatus(moisture, minMoisture, maxMoisture) {
-    if (moisture >= minMoisture && moisture <= maxMoisture) return 'optimal';
-    if (moisture < minMoisture) return moisture < minMoisture * 0.7 ? 'critical' : 'low';
-    return 'optimal';
 }
 
 function renderSensors() {
@@ -217,13 +94,26 @@ function renderSensors() {
     
     grid.innerHTML = sensors.map(sensor => {
         const status = getMoistureStatus(sensor.current_moisture, sensor.min_moisture, sensor.max_moisture);
-        const fillClass = sensor.current_moisture < sensor.min_moisture ? 'low' : 
-                         sensor.current_moisture < sensor.max_moisture ? 'medium' : '';
+        const fillClass = sensor.current_moisture < sensor.min_moisture ? 'low' : '';
         
         return `
             <div class="sensor-card">
                 <div class="sensor-header">
-                    <h3>Sensor ${sensor.id}</h3>
+                    <h3 class="sensor-title">Sensor ${sensor.id}</h3>
+                    <span class="sensor-badge badge-${status}">${status.toUpperCase()}</span>
+                </div>
+                
+                <div class="moisture-display">
+                    <div class="moisture-value">${sensor.current_moisture.toFixed(1)}%</div>
+                    <div class="moisture-bar">
+                        <div class="moisture-fill ${fillClass}" style="width: ${sensor.current_moisture}%"></div>
+                    </div>
+                </div>
+                
+                <div class="crop-info">
+                    <p><strong>Crop:</strong> ${sensor.crop_name}</p>
+                    <p><strong>Optimal Range:</strong> ${sensor.min_moisture}% - ${sensor.max_moisture}%</p>
+                    <p><strong>Water Amount:</strong> ${sensor.water_amount}ml</p>
                     <select class="crop-select" onchange="changeCrop(${sensor.id}, this.value)">
                         ${crops.map(crop => `
                             <option value="${crop.id}" ${crop.id === sensor.crop_id ? 'selected' : ''}>
@@ -233,64 +123,193 @@ function renderSensors() {
                     </select>
                 </div>
                 
-                <div class="moisture-display">
-                    <div class="moisture-value">${sensor.current_moisture.toFixed(1)}%</div>
-                    <div class="moisture-bar">
-                        <div class="moisture-fill ${fillClass}" style="width: ${sensor.current_moisture}%">
-                            ${sensor.current_moisture.toFixed(0)}%
-                        </div>
-                    </div>
-                    <span class="status-badge status-${status}">${status.toUpperCase()}</span>
-                </div>
-                
-                <div class="crop-info">
-                    <p><strong>Crop:</strong> ${sensor.crop_name}</p>
-                    <p><strong>Optimal Range:</strong> ${sensor.min_moisture}% - ${sensor.max_moisture}%</p>
-                    <p><strong>Water Amount:</strong> ${sensor.water_amount}ml</p>
-                </div>
-                
                 <div class="sensor-actions">
                     <button class="btn btn-water" onclick="waterPlant(${sensor.id})">💧 Water Now</button>
                     <button class="btn btn-history" onclick="showHistory(${sensor.id})">📊 History</button>
-                </div>
-                
-                <div class="last-reading">
-                    Last: ${new Date(sensor.last_reading).toLocaleString()}
                 </div>
             </div>
         `;
     }).join('');
 }
 
-async function init() {
-    await fetchCrops();
-    await fetchSensors();
-    
-    document.getElementById('autoModeBtn').addEventListener('click', toggleAutoMode);
-    document.getElementById('refreshBtn').addEventListener('click', async () => {
-        for (let sensor of sensors) {
-            await updateMoisture(sensor.id);
-        }
-        await fetchSensors();
-    });
-    
-    document.getElementById('scheduleBtn').addEventListener('click', showSchedules);
-    document.getElementById('exportBtn').addEventListener('click', exportData);
-    document.getElementById('addScheduleBtn').addEventListener('click', addSchedule);
-    document.getElementById('loginBtn').addEventListener('click', login);
-    
-    document.querySelectorAll('.close').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.getElementById(e.target.dataset.modal).style.display = 'none';
+function getMoistureStatus(moisture, minMoisture, maxMoisture) {
+    if (moisture >= minMoisture && moisture <= maxMoisture) return 'optimal';
+    if (moisture < minMoisture) return moisture < minMoisture * 0.7 ? 'critical' : 'low';
+    return 'optimal';
+}
+
+async function waterPlant(sensorId) {
+    try {
+        const response = await fetch(`${API_URL}/sensor/${sensorId}/water`, {
+            method: 'POST'
         });
-    });
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification(`Watered! ${data.moisture_before}% → ${data.moisture_after}%`, 'success');
+            await fetchSensors();
+        }
+    } catch (error) {
+        showNotification('Watering failed', 'error');
+    }
+}
+
+async function changeCrop(sensorId, cropId) {
+    try {
+        await fetch(`${API_URL}/sensor/${sensorId}/crop`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({crop_id: cropId})
+        });
+        await fetchSensors();
+        showNotification('Crop updated', 'success');
+    } catch (error) {
+        showNotification('Update failed', 'error');
+    }
+}
+
+async function toggleAutoMode() {
+    autoMode = !autoMode;
+    try {
+        await fetch(`${API_URL}/auto-mode`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({enabled: autoMode})
+        });
+        
+        document.getElementById('autoStatus').textContent = autoMode ? 'ON' : 'OFF';
+        showNotification(`Auto mode ${autoMode ? 'enabled' : 'disabled'}`, 'success');
+    } catch (error) {
+        showNotification('Failed to toggle auto mode', 'error');
+    }
+}
+
+async function showHistory(sensorId) {
+    currentSensorForExport = sensorId;
+    try {
+        const response = await fetch(`${API_URL}/history/${sensorId}`);
+        const history = await response.json();
+        
+        const content = document.getElementById('historyContent');
+        content.innerHTML = history.map(log => `
+            <div class="history-item">
+                <strong>${new Date(log.timestamp).toLocaleString()}</strong><br>
+                Moisture: ${log.moisture_before.toFixed(1)}% → ${log.moisture_after.toFixed(1)}%<br>
+                Amount: ${log.amount}ml
+            </div>
+        `).join('');
+        
+        openModal('historyModal');
+    } catch (error) {
+        showNotification('Failed to load history', 'error');
+    }
+}
+
+async function exportData() {
+    if (currentSensorForExport) {
+        window.location.href = `${API_URL}/export/${currentSensorForExport}`;
+    }
+}
+
+async function addSchedule() {
+    const sensorId = document.getElementById('scheduleSensor').value;
+    const time = document.getElementById('scheduleTime').value;
+    const days = document.getElementById('scheduleDays').value;
     
+    try {
+        await fetch(`${API_URL}/schedules`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({sensor_id: sensorId, time, days})
+        });
+        showNotification('Schedule added', 'success');
+        loadSchedules();
+    } catch (error) {
+        showNotification('Failed to add schedule', 'error');
+    }
+}
+
+async function loadSchedules() {
+    try {
+        const response = await fetch(`${API_URL}/schedules`);
+        const schedules = await response.json();
+        
+        const select = document.getElementById('scheduleSensor');
+        select.innerHTML = sensors.map(s => 
+            `<option value="${s.id}">Sensor ${s.id} - ${s.crop_name}</option>`
+        ).join('');
+        
+        const list = document.getElementById('scheduleList');
+        list.innerHTML = schedules.map(sch => `
+            <div class="schedule-item">
+                <div>
+                    <strong>Sensor ${sch.sensor_id}</strong> at ${sch.time}<br>
+                    Days: ${sch.days}
+                </div>
+                <button class="btn btn-secondary" onclick="deleteSchedule(${sch.id})">Delete</button>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading schedules:', error);
+    }
+}
+
+async function deleteSchedule(scheduleId) {
+    try {
+        await fetch(`${API_URL}/schedules/${scheduleId}`, {method: 'DELETE'});
+        showNotification('Schedule deleted', 'success');
+        loadSchedules();
+    } catch (error) {
+        showNotification('Failed to delete schedule', 'error');
+    }
+}
+
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.classList.add('active');
+    if (modalId === 'scheduleModal') {
+        loadSchedules();
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.classList.remove('active');
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 2rem;
+        background: ${type === 'success' ? '#10b981' : '#ef4444'};
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+    `;
+    
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+function startLiveUpdates() {
     setInterval(async () => {
         for (let sensor of sensors) {
-            await updateMoisture(sensor.id);
+            try {
+                await fetch(`${API_URL}/sensor/${sensor.id}/moisture`);
+            } catch (error) {
+                console.error('Error updating moisture:', error);
+            }
         }
         await fetchSensors();
     }, 30000);
 }
-
-checkLogin();
