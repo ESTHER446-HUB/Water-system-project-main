@@ -12,13 +12,24 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupEventListeners() {
-    document.getElementById('loginBtn')?.addEventListener('click', login);
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', login);
+    }
+    
+    const passwordInput = document.getElementById('password');
+    if (passwordInput) {
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') login();
+        });
+    }
+    
     document.getElementById('autoModeCard')?.addEventListener('click', toggleAutoMode);
     document.getElementById('scheduleCard')?.addEventListener('click', () => openModal('scheduleModal'));
     document.getElementById('exportBtn')?.addEventListener('click', exportData);
     document.getElementById('addScheduleBtn')?.addEventListener('click', addSchedule);
     document.getElementById('getStartedBtn')?.addEventListener('click', () => {
-        document.querySelector('#sensors')?.scrollIntoView({ behavior: 'smooth' });
+        document.querySelector('.sensors-section')?.scrollIntoView({ behavior: 'smooth' });
     });
 }
 
@@ -33,11 +44,17 @@ async function login() {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     
+    if (!username || !password) {
+        alert('Please enter username and password');
+        return;
+    }
+    
     try {
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({username, password})
+            body: JSON.stringify({username, password}),
+            credentials: 'include'
         });
         
         const data = await response.json();
@@ -45,20 +62,25 @@ async function login() {
             loggedIn = true;
             closeModal('loginModal');
             document.getElementById('userProfile').innerHTML = `<span class="user-avatar">👤</span>`;
-            init();
+            await init();
         } else {
-            alert('Invalid credentials');
+            alert('Invalid username or password');
         }
     } catch (error) {
-        alert('Connection error');
+        console.error('Login error:', error);
+        alert('Login failed. Please try again.');
     }
 }
 
 async function init() {
-    await fetchCrops();
-    await fetchSensors();
-    await fetchStats();
-    startLiveUpdates();
+    try {
+        await fetchCrops();
+        await fetchSensors();
+        await fetchStats();
+        startLiveUpdates();
+    } catch (error) {
+        console.error('Initialization error:', error);
+    }
 }
 
 async function fetchStats() {
