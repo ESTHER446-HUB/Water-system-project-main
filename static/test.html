@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+</head>
+<body>
+    <h1>Testing Backend Connection</h1>
+    <button onclick="testAPI()">Test API</button>
+    <pre id="result"></pre>
+    
+    <script>
+        async function testAPI() {
+            const result = document.getElementById('result');
+            result.textContent = 'Testing...\n';
+            
+            try {
+                // Test crops endpoint
+                const cropsRes = await fetch('/api/crops');
+                const crops = await cropsRes.json();
+                result.textContent += `✓ Crops: ${crops.length} found\n`;
+                
+                // Test sensors endpoint
+                const sensorsRes = await fetch('/api/sensors');
+                const sensors = await sensorsRes.json();
+                result.textContent += `✓ Sensors: ${sensors.length} found\n`;
+                
+                // Test stats endpoint
+                const statsRes = await fetch('/api/stats');
+                const stats = await statsRes.json();
+                result.textContent += `✓ Stats: ${JSON.stringify(stats)}\n`;
+                
+                result.textContent += '\n✅ Backend is working!';
+            } catch (error) {
+                result.textContent += `\n❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
